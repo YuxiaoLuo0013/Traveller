@@ -184,10 +184,10 @@ def test(args,dataloader_test,travel_location):
     # 加载训练好的模型
     ar_model=ARModel(vocab_size=num_loc,  # (最大位置ID) + 1(mask token)+sos
                       travel_location=travel_location,
-                      d_model=512,
+                      d_model=128,
                       nhead=8,
                       num_decoder_layers=4,
-                      dim_feedforward=2048).to(device)
+                      dim_feedforward=512).to(device)
     ar_model.load_state_dict(torch.load('./autoregressive/checkpoints/'+args.dataset+'_travel_pattern_best_'+str(args.max_length)+'.pkl', map_location=device)['model_state_dict'])
 
     ar_model.eval()
@@ -287,4 +287,5 @@ if __name__ == '__main__':
     print('l_jsd:',result['length_jsd'])
     print('f_jsd:',result['frequency_jsd'])
     print('cpc:',result['cpc'])
+
 
