@@ -48,10 +48,10 @@ def train_ar(args):
         vocab_size=900
     model = ARModel(vocab_size=vocab_size,  # 4422(最大位置ID) + 1(mask token) 2224
                       travel_location=travel_location,
-                      d_model=512,
+                      d_model=128,
                       nhead=8,
                       num_decoder_layers=4,
-                      dim_feedforward=2048,
+                      dim_feedforward=512,
                       max_len=args.max_length).to(device)
                       
     # 损失函数和优化器
