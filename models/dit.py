@@ -26,26 +26,27 @@ class TravDit(torch.nn.Module):
         self.dropout2 = nn.Dropout(0.1)
         self.dropout3 = nn.Dropout(0.3)
 
-        self.controlnet = nn.Embedding(travel_location,location_embedding)
+        self.controlnet = nn.Embedding(travel_location,int(location_embedding/4))
 
-        self.spatial_transformer = nn.Sequential(*[TransformerBlock(d_model=location_embedding, nhead=self.num_head,
-                                                                                                 dim_feedforward=4*location_embedding, dropout=0.1) for _ in range(TrajGenerator_Translayers)])
+        self.spatial_transformer = nn.Sequential(*[TransformerBlock(d_model=int(location_embedding/4), nhead=self.num_head,
+                                                                                                 dim_feedforward=location_embedding, dropout=0.1) for _ in range(TrajGenerator_Translayers)])
 
-        self.home_embedding_layer=nn.Embedding(num_location,location_embedding)
-
+        self.home_embedding_layer=nn.Embedding(num_location,int(location_embedding/4))
+        self.down=nn.Linear(location_embedding,int(location_embedding/4))
+        self.up=nn.Linear(int(location_embedding/4),location_embedding)
 
     def TrajGenerator(self, xt, time, home_condition, temporal_condition):
         t = self.temporal_embed(time)
         home_embedding=self.home_embedding_layer(home_condition)
         et = self.pos_encoding1(xt)
-    
+        et=self.down(et)
         temporal_condition1 = self.controlnet(temporal_condition.to(torch.long))
 
         temporal_condition1 = self.pos_encoding2(temporal_condition1)
 
         for block in self.spatial_transformer:
             et = block(et,temporal_condition1,home_embedding,t)
-
+        et=self.up(et)
         same_class = (temporal_condition.unsqueeze(2) == temporal_condition.unsqueeze(1)).float()
         et_expanded = et.unsqueeze(1)  # 扩展pred_x0以匹配same_class的形状 [512, 1, 24, 64]
         same_class_expanded = same_class.unsqueeze(3)  # 扩展same_class以匹配pred_x0的特征维度 [512, 24, 24, 1]
@@ -175,3 +176,4 @@ class TransformerBlock(nn.Module):
         tgt = tgt +tgt1*alpha_3
 
         return tgt
+
